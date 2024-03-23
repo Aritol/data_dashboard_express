@@ -8,8 +8,6 @@ function parseBearer(bearer, headers) {
     let token = null;
     if (bearer.startsWith("Bearer ")) {
         token = bearer.slice(7, bearer.length);
-        // console.log("token");
-        // console.log(token);
     }
     const decoded = jwt.verify(token, prepareSecret(headers));
     return decoded;

@@ -22,9 +22,10 @@ module.exports.getList = function (req, res) {
 
 module.exports.signup = function (req, res) {
     var user = new UsersModel({
-        email: req.body.email,
         firstName: req.body.firstName,
         lastName: req.body.lastName,
+        email: req.body.email,
+        password: req.body.password,
     });
     user.setPassword(req.body.password);
     user.save()
@@ -42,18 +43,16 @@ module.exports.signup = function (req, res) {
             });
         })
         .catch((err) => {
+            console.log("err");
+            console.log(err);
             return res.status(500).json({ error: "Signup error" });
         });
 };
 
 module.exports.login = function (req, res) {
-    console.log("req.body");
-    console.log(req.body);
     if (!req.body.email) {
         return res.status(401).json({ error: "Email is required" });
     }
-    console.log(req.body.email);
-    console.log(req.body.password);
     if (!req.body.password) {
         return res.status(401).json({ error: "Password is required" });
     }
@@ -76,7 +75,7 @@ module.exports.login = function (req, res) {
             );
             const expiresAt = new Date().getTime() + 36000000;
             res.status(200).json({
-                result: "Authorized",
+                status: sucess,
                 user: {
                     authData: {
                         name: user._doc.name,
@@ -87,6 +86,8 @@ module.exports.login = function (req, res) {
             });
         })
         .catch((err) => {
+            console.log("err");
+            console.log(err);
             return res.status(401).json({ error: "Login error" });
         });
 };
