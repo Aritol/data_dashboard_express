@@ -11,10 +11,10 @@ const UsersSchema = new Schema({
         required: true,
         unique: true,
         minlength: 3,
-        maxlength: 100,
+        maxlength: 100
     },
     hash: String, //поле, де буде зберігатися хеш пароля
-    salt: String, //поле, де буде зберігатися ключ
+    salt: String //поле, де буде зберігатися ключ
 });
 
 //--------------- Функція для формування хешу пароля -----------------

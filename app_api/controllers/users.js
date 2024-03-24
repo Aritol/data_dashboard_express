@@ -13,7 +13,7 @@ module.exports.getList = function (req, res) {
             if (err)
                 return sendJSONResponse(res, 500, {
                     success: false,
-                    err: { msg: "Fetch faild!" },
+                    err: { msg: "Fetch faild!" }
                 });
 
             sendJSONResponse(res, 200, { success: true, data: users });
@@ -25,7 +25,7 @@ module.exports.signup = function (req, res) {
         firstName: req.body.firstName,
         lastName: req.body.lastName,
         email: req.body.email,
-        password: req.body.password,
+        password: req.body.password
     });
     user.setPassword(req.body.password);
     user.save()
@@ -33,13 +33,13 @@ module.exports.signup = function (req, res) {
             const token = prepareToken(
                 {
                     id: user._id,
-                    name: user.name,
+                    name: user.name
                 },
                 req.headers
             );
             return res.status(201).json({
                 result: "Signuped successfully",
-                token,
+                token
             });
         })
         .catch((err) => {
@@ -69,20 +69,20 @@ module.exports.login = function (req, res) {
             const token = prepareToken(
                 {
                     id: user._id,
-                    name: user.name,
+                    name: user.name
                 },
                 req.headers
             );
             const expiresAt = new Date().getTime() + 36000000;
             res.status(200).json({
-                status: sucess,
+                status: true,
                 user: {
                     authData: {
                         name: user._doc.name,
-                        access_token: token,
+                        access_token: token
                     },
-                    expiresAt,
-                },
+                    expiresAt
+                }
             });
         })
         .catch((err) => {
