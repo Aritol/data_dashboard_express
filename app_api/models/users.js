@@ -4,6 +4,7 @@ const crypto = require("crypto");
 const { Schema } = mongoose;
 
 const UsersSchema = new Schema({
+    userId: { type: Number, required: true, minlength: 5, maxlength: 6 },
     firstName: { type: String, required: true, minlength: 4, maxlength: 100 },
     lastName: { type: String, required: true, minlength: 4, maxlength: 100 },
     email: {
@@ -11,6 +12,12 @@ const UsersSchema = new Schema({
         required: true,
         unique: true,
         minlength: 3,
+        maxlength: 100
+    },
+    photo: {
+        type: String,
+        required: false,
+        minlength: 1,
         maxlength: 100
     },
     hash: String, //поле, де буде зберігатися хеш пароля

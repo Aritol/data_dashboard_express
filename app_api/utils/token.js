@@ -1,16 +1,20 @@
 const jwt = require("jsonwebtoken");
 
-const expiresIn = "60m";
-// const expiresIn = "1m";
+const expiresIn = "24h";
 const tokenKey = "Our Token Key"; // Save in .env !!!
 
 function parseBearer(bearer, headers) {
     let token = null;
-    if (bearer.startsWith("Bearer ")) {
-        token = bearer.slice(7, bearer.length);
+    try {
+        if (bearer.startsWith("Bearer ")) {
+            token = bearer.slice(7, bearer.length);
+        }
+        const decoded = jwt.verify(token, prepareSecret(headers));
+        return decoded;
+    } catch (error) {
+        console.error("Помилка при верифікації токена:", error);
+        return null;
     }
-    const decoded = jwt.verify(token, prepareSecret(headers));
-    return decoded;
 }
 
 function prepareToken(data, headers) {
