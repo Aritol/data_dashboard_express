@@ -50,6 +50,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "public")));
+app.use(express.static(path.join(__dirname, "/storage")));
 app.use(jwtAuth);
 
 app.use("/", indexRouter);

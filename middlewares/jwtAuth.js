@@ -13,7 +13,7 @@ module.exports = async (req, res, next) => {
                 req.headers.authorization,
                 req.headers
             );
-            if (user) {
+            if (validateToken) {
                 user = validateToken;
                 user.user_id = req.headers.user_id;
             }
@@ -22,5 +22,7 @@ module.exports = async (req, res, next) => {
         console.log(error);
     }
     req.user = user;
+    console.log("req.user 1 ");
+    console.log(req.user);
     return next();
 };

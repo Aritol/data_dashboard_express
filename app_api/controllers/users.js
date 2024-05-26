@@ -1,9 +1,11 @@
 const UsersModel = require("../models/users");
 const { prepareToken } = require("../utils/token");
-
+const express = require("express");
 const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
+const { get } = require("lodash");
+const cloudinary = require("../utils/cloudinary");
 
 const sendJSONResponse = (res, status, content) => {
     res.setHeader("Access-Control-Allow-Origin", "*");
@@ -95,51 +97,136 @@ async function login(req, res) {
         return res.status(500).json({ error: "Login error" });
     }
 }
-const getUserData = async (req, res) => {};
+const getUserData = async (req, res) => {
+    try {
+        const userId = get(req.user, "user_id", 0) || 0;
+        if (!userId) {
+            return sendJSONResponse(res, 400, {
+                success: false,
+                err: { msg: "Invalid user ID" }
+            });
+        }
+
+        const users = await UsersModel.find({ userId }).select().exec();
+        const files = express.static(
+            path.join(__dirname, `images/avatars/${userId}`)
+        );
+        console.log("file");
+        console.log(files);
+        sendJSONResponse(res, 200, { success: true, data: users });
+    } catch (err) {
+        console.error("Fetch failed:", err);
+        sendJSONResponse(res, 500, {
+            success: false,
+            err: { msg: "Fetch failed!" }
+        });
+    }
+};
 
 const saveImage = async (req, res) => {
-    const { userId } = req.body || 0;
-    if (userId) {
-        const storageDir = path.join(
-            __dirname,
-            `../../storage/images/${userId}`
-        );
-        const user = await UsersModel.findOne({ userId: userId });
-        if (!user) {
-            console.error(" користувача не знайдено");
-            return res
-                .status(500)
-                .send({ error: "Помилка, користувача не знайдено" });
-        }
+    const userId = get(req.user, "user_id", 0) || 0;
 
+    console.log("userId");
+    console.log(userId);
+    if (userId) {
         const storage = multer.diskStorage({
-            destination: (req, file, cb) => {
-                cb(null, storageDir);
-            },
             filename: (req, file, cb) => {
-                cb(null, Date.now() + path.extname(file.originalname));
+                console.log("file.originalname");
+                console.log(file.originalname);
+                cb(null, file.originalname);
             }
         });
-        user.photo = Date.now() + path.extname(file.originalname);
 
-        await user.save();
+        const upload = multer({ storage: storage }).single("file");
+        const user = await UsersModel.findOne({ userId: userId });
 
-        const upload = multer({ storage: storage });
-
-        if (!fs.existsSync(storageDir)) {
-            fs.mkdirSync(storageDir, { recursive: true });
-        }
-        upload.single("file")(req, res, (err) => {
+        upload(req, res, async (err) => {
             if (err) {
                 console.error(err);
                 return res
                     .status(500)
                     .send({ error: "Помилка при завантаженні файлу" });
             }
-            return res.status(200).send({ uploadSuccess: true });
+
+            cloudinary.uploader.upload(req.file.path, function (error, result) {
+                if (error) {
+                    console.error(error);
+                    return res.status(500).send({
+                        error: "Помилка при завантаженні файлу на сервер"
+                    });
+                }
+                console.log("result");
+                console.log(result);
+                const photoUrl = get(result, "url", "") || "";
+                if (photoUrl && photoUrl.length) {
+                    user.photo = photoUrl;
+                    user.save();
+                }
+                return res
+                    .status(200)
+                    .send({ uploadSuccess: true, url: result.secure_url });
+            });
         });
+    } else {
+        return res.status(400).send({ error: "Користувач не авторизований" });
     }
-    return res.status(500).send({ error: "Помилка" });
+    // if (userId) {
+    //     // const storageDir = path.join(
+    //     //     __dirname,
+    //     //     `../../storage/images/avatars/${userId}`
+    //     // );
+    //     // const user = await UsersModel.findOne({ userId: userId });
+    //     // if (!user) {
+    //     //     console.error(" користувача не знайдено");
+    //     //     return res
+    //     //         .status(500)
+    //     //         .send({ error: "Помилка, користувача не знайдено" });
+    //     // }
+    //     // let fileName = "";
+    //     const storage = multer.diskStorage({
+    //         // destination: (req, file, cb) => {
+    //         //     cb(null, storageDir);
+    //         // },
+    //         filename: (req, file, cb) => {
+    //             // fileName = Date.now() + path.extname(file.originalname);
+    //             // console.log("fileName funcs");
+    //             // console.log(fileName);
+    //             // cb(null, Date.now() + path.extname(file.originalname));
+    //             console.log("file.originalname");
+    //             console.log(file.originalname);
+    //             cb(null, file.originalname);
+    //         }
+    //     });
+
+    //     const upload = multer({ storage: storage });
+    //     // // console.log(await storage.getFilename());
+
+    //     // if (!fs.existsSync(storageDir)) {
+    //     //     fs.mkdirSync(storageDir, { recursive: true });
+    //     // }
+    //     upload.single("image")(req, res, async (err) => {
+    //         if (err) {
+    //             console.error(err);
+    //             return res
+    //                 .status(500)
+    //                 .send({ error: "Помилка при завантаженні файлу" });
+    //         }
+    //         cloudinary.uploader.upload(req.file.path, function (error, result) {
+    //             if (error) {
+    //                 console.error(error);
+    //                 return res.status(500).send({
+    //                     error: "Помилка при завантаженні файлу на сервер"
+    //                 });
+    //             }
+    //         });
+    //         console.log("result");
+    //         console.log(result);
+    //         // user.photo = fileName;
+    //         // user.save();
+    //         return res.status(200).send({ uploadSuccess: true });
+    //     });
+    // }
+    // return res.status(500).send({ error: "Помилка" });
 };
 
 const deleteImage = async (req, res) => {
@@ -148,7 +235,7 @@ const deleteImage = async (req, res) => {
         try {
             const user = await UsersModel.findOne({ userId: userId });
             delete user.photo;
-            await record.save();
+            await user.save();
             return res.status(200).send({ success: "Помилка" });
         } catch (error) {
             console.error("Виникла помилка:", error);
