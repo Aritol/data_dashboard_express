@@ -1,6 +1,5 @@
 const UsersModel = require("../models/users");
 const { prepareToken } = require("../utils/token");
-const express = require("express");
 const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
@@ -178,7 +177,9 @@ const deleteImage = async (req, res) => {
     if (userId) {
         try {
             const user = await UsersModel.findOne({ userId: userId });
-            delete user.photo;
+            user.photo = "";
+            console.log("user");
+            console.log(user);
             await user.save();
             return res.status(200).send({ success: true });
         } catch (error) {

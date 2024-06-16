@@ -17,7 +17,7 @@ const UsersSchema = new Schema({
     photo: {
         type: String,
         required: false,
-        minlength: 1,
+        minlength: 0,
         maxlength: 100
     },
     hash: String, //поле, де буде зберігатися хеш пароля
